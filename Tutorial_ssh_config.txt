@@ -1,0 +1,132 @@
+Configuración de ssh_config
+
+Para acceder a una máquina remota mediante una conexión cifrada instalaremos OpenSSH
+OpenSSH (Open Secure Shell) ofrece herramientas que permiten realizar comunicaciones cifradas a través de la red, usando el protocolo SSH.
+
+Abrimos la terminal de linux e instalamos OpenSSH
+sudo apt-get install openssh-server
+
+Ya podremos conectarnos a nuestro equipo remoto introduciento el usuario del sistema y su password.
+Para acceder a la configuración, editaremos el fichero sshd_config
+sudo nano /etc/ssh/sshd_config
+
+
+Algunas notas de la configuración de ssh_config
+
+Puerto por defecto por el que escuchará. si cambiamos el puerto tendriamos que acceder así: ssh -p puerto usuario@maquina  
+Port 22
+
+Por defecto el servicio SSH escuchará peticiones de cualquier dirección. Podemos indicar por ejemplo que solo se pueda acceder localmente desde una ip determinada. Ejemplo: ListenAddress 192.168.1.100
+#ListenAddress ::
+#ListenAddress 0.0.0.0
+
+SSH usa dos protocolos. Habilitaremos el protocolo 2 ya que es más seguro que el antiguo protocolo 1
+Protocol 2
+
+Lugar donde se guardan las Keys del protocolo 2
+HostKey /etc/ssh/ssh_host_rsa_key
+HostKey /etc/ssh/ssh_host_dsa_key
+HostKey /etc/ssh/ssh_host_ecdsa_key
+HostKey /etc/ssh/ssh_host_ed25519_key
+
+Separa privilegios mediante la creación de un proceso hijo sin privilegios. Esta directiva de seguridad debe de estar activada
+UsePrivilegeSeparation yes
+
+La opción KeyRegenerationInterval especifica cuánto tiempo en segundos el servidor debe esperar antes de regenerar automáticamente su clave. Esta es una característica de seguridad para evitar el descifrado de sesiones capturadas.
+KeyRegenerationInterval 3600
+
+La opción ServerKeyBits especifica cuántos bits utilizar en la clave del servidor. Estos bits se utilizan cuando el daemon comienza a generar su clave RSA.
+ServerKeyBits 1024
+
+Logging
+SyslogFacility AUTH
+LogLevel INFO
+
+La opción LoginGraceTime especifica cuánto tiempo esperará en segundos antes de desconectarse si el usuario no ha iniciado sesión correctamente después de una solicitud de conexión el servidor
+LoginGraceTime 120
+
+Desactivar el acceso como root. Si queremos hacer uso de funciones de root usar el comando su valores posibles:
+prohibit-password: únicamente podremos loguearnos como root si tenemos una clave SSH instalada en el servidor, eliminando el ingreso de contraseña por teclado.
+no: el usuario root no puede hacer login remoto.
+without-password: root puede hacer login solamente con autenticacion de clave privada.
+forced-commands-only:  root puede hacer login solamente si ejecuta un comando simple y no pasa al shell.
+PermitRootLogin prohibit-password
+
+La opción StrictModes especifica si ssh debe comprobar los permisos del usuario en su #directorio de inicio y los archivos de rhosts antes de aceptar el inicio de sesión.
+StrictModes yes
+
+Especifica si se permite la autenticación RSA pura. El valor predeterminado es "yes". Esta opción sólo se aplica al protocolo versión 1.
+RSAAuthentication yes
+
+Especifica si se permite la autenticación de clave pública. El valor predeterminado es "yes". # Esta opción sólo se aplica al protocolo versión 2.
+PubkeyAuthentication yes
+
+Especifica el archivo que contiene las claves públicas que se pueden utilizar para la autenticación de usuarios.
+#AuthorizedKeysFile     %h/.ssh/authorized_keys
+
+Especifica que los archivos .rhosts y .shosts no serán utilizados en RhostsRSAAuthentication o  autenticación del tipo HostbasedAuthentication.
+Estos archivos se encuentran en la carpeta del usuario dentro del "home" :  ~/.rhosts y ~/.shosts del usuario
+ ~/.rhosts: Cualquier usuario del sistema remoto podrá conectar al nuestro (sin que se le solicite contraseña) pero sólo bajo el nombre de usuario en cuyo $HOME se encuentra en este archivo.
+IgnoreRhosts yes
+
+
+Especifica si se permite la autenticación rhosts o /etc/hosts.equiv junto con la autenticación  correcta del host del cliente de clave pública (autenticación basada en host). Para que funcione necesitará las claves de host /etc/ssh_known_hosts
+RhostsRSAAuthentication no
+
+La autenticación basada en host permite a los hosts autenticarse en nombre de todos o algunos # de los usuarios del sistema.
+HostbasedAuthentication no
+
+Permite entrar con una contraseña vacia
+PermitEmptyPasswords no
+
+Especifica si se permite la autenticación a través de PAM o a través de estilos de autenticación soportados en login.conf
+ChallengeResponseAuthentication no
+
+La opción PasswordAuthentication especifica si debemos usar la autenticación basada en contraseña. Para una #mayor seguridad, esta opción siempre debe estar en "yes".
+#PasswordAuthentication yes
+
+Opciones para Kerberos
+#KerberosAuthentication no
+#KerberosGetAFSToken no
+#KerberosOrLocalPasswd yes
+#KerberosTicketCleanup yes
+
+Opciones para GSSAPI
+#GSSAPIAuthentication no
+#GSSAPICleanupCredentials yes
+
+La opción X11Forwarding permite ejecutar apliaciones gráficas de una máquina remota
+X11Forwarding yes
+
+Especifica el primer número de pantalla disponibles para sshd. Esto evita que sshd interfiera con servidores X11 reales
+X11DisplayOffset 10
+
+"PrintMotd" especifica si el servicio SSH debería mostrar el contenido de "/etc/motd" cuando el usuario ingresa
+PrintMotd no
+
+"PrintLastLog" muestra la última vez que alguien ingresó al servidor con el mismo usuario con que ingresamos nosotros.
+PrintLastLog yes
+
+Esta opción se usa para dar estabilidad y que las sesiones no den un "TimeOut"
+TCPKeepAlive yes
+
+Especifica si se utiliza login para las sesiones de inicio de sesión interactivas. El valor predeterminado es "no".
+#UseLogin no
+
+Controlar el máximo de conexiones
+10: Número de conexiones no autenticadas antes de comenzar a caer
+30: Porcentaje de probabilidad de caer una vez que llegamos a 10
+60: Número máximo de conexiones en las que comenzamos a caer
+#MaxStartups 10:30:60
+
+Crea una pantalla de presentación. Lo podemos editar con nano
+#Banner /etc/issue.net
+
+Permite que el cliente pase variables de entorno locales al host remoto
+AcceptEnv LANG LC_*
+
+Implementa el subsistema de transferencia de archivos "SFTP ".
+Subsystem sftp /usr/lib/openssh/sftp-server
+
+Debe estar marcado como "yes" para poder acceder por contraseña. Si queremos que solo acceda por llave lo marcariamos como "no"
+UsePAM yes

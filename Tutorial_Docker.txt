@@ -1,2 +1,98 @@
-Docker es un software que simplifica el proceso de administración de aplicaciones en contenedores. Estos permiten ejecutar sus aplicaciones en procesos con aislamiento de recursos. 
-Son similares a las máquinas virtuales, pero los contenedores son más portátiles, más flexibles con los recursos y más dependientes del sistema operativo host.
+Docker es un software que simplifica el proceso de administración de aplicaciones en contenedores. Estos permiten ejecutar sus aplicaciones en procesos con aislamiento de recursos. Son similares a las máquinas virtuales, pero los contenedores son más portátiles, más flexibles con los recursos y más dependientes del sistema operativo host.
+
+Una vez instalado docker en el sistema operativo que estemos usando. Por defecto, el comando docker solo puede ser ejecutado por el usuario root o un usuario del grupo docker, que se crea automáticamente durante el proceso de instalación de Docker.
+
+Si queremos evitar escribir sudo al ejecutar el comando docker, debemos agregar nuestro nombre de usuario al grupo docker:
+$ sudo usermod -aG docker ${USER}
+
+
+Comando docker
+
+El uso de docker consiste en pasar a este una cadena de opciones y comandos seguida de argumentos. La sintaxis adopta esta forma:
+$ docker [opciones] [comando] [argumento]
+
+Para ver todos los subcomandos disponibles, escribimos lo siguiente:
+$ docker
+
+Si deseamos ver las opciones disponibles para un comando específico, escribimos lo siguiente:
+$ docker subcomando-docker –help
+
+Para ver información sobre Docker relacionada con todo el sistema, utilizamos el siguiente comando:
+$ docker info
+
+
+Imágenes de Docker
+
+Los contenedores de Docker se construyen con imágenes de Docker. Por defecto, Docker obtiene estas imágenes de Docker Hub, un registro de Docker gestionado por Docker, la empresa responsable del proyecto Docker. Cualquiera puede alojar sus imágenes en Docker Hub, de modo que la mayoría de las aplicaciones y las distribuciones de Linux que necesitaremos tendrán imágenes alojadas allí.
+
+Para verificar si puede acceder a imágenes y descargarlas de Docker Hub, escribimos lo siguiente:
+$ docker run hello-world
+
+Inicialmente, Docker no pudo encontrar la imagen de hello-world a nivel local. Por ello la descargó de Docker Hub, el repositorio predeterminado. Una vez que se descargó la imagen, Docker creó un contenedor a partir de ella y de la aplicación dentro del contenedor ejecutado, y mostró el mensaje.
+
+Podemos buscar imágenes disponibles en Docker Hub usando el comando docker con el subcomando search. Por ejemplo, para buscar la imagen de Ubuntu, escribimos lo siguiente:
+$ docker search ubuntu
+
+El comando que acabamos de ejecutar buscará en los repositorios de Docker Hub en busca de imágenes que coincidan con el criterio de búsqueda y devuelve los posibles candidatos.
+
+En la columna de OFFICIAL, OK indica que la imagen creada está avalada por la empresa responsable del proyecto. Una vez que identifique la imagen que desearía usar, podemos descargarla utilizando el subcomando docker pull.
+$ docker pull ubuntu
+
+Para ver las imágenes que tenemos disponibles localmente utilizamos el comando:
+$ docker images
+
+
+Ejecutar un contenedor de Docker
+
+El contenedor hello-world que creamos en el paso anterior es un ejemplo de un contenedor que se ejecuta y se cierra tras emitir un mensaje de prueba. Los contenedores pueden ofrecer una utilidad mucho mayor y ser interactivos
+
+Como ejemplo, ejecutemos un contenedor usando la imagen más reciente de Ubuntu. La combinación de los conmutadores -i y -t le proporcionan un acceso interactivo del shell al contenedor:
+$ docker run -it ubuntu
+
+Nuestros símbolos del sistema deben cambiar para reflejar el hecho de que ahora estamos  trabajando dentro del contenedor.
+
+Ahora podemos ejecutar cualquier comando dentro del contenedor. Por ejemplo, actualizar los repositorios. No es necesario prefijar ningún comando con sudo, ya que todas las  operaciones dentro del contenedor se ejecutan por defecto con el usuario root:
+$ apt update
+
+Importante: Cuando trabajamos con contenedores debemos tener en cuenta un detalle y es que las imágenes que implementamos en muchas ocasiones pueden no tener instaladas algunas aplicaciones que por defecto si vienen instaladas en otras imágenes. Un claro ejemplo es que el contenedor de Ubuntu que estamos utilizando no tiene el editor de texto vim o nano.
+
+El motivo por el que no está instalado por defecto este editor es simple, las imágenes de Docker buscan ser lo más ligeras y modulares posibles para ofrecer servicios de una manera sencilla y rápida. Por lo que instalar programas innecesarios que harían que el tamaño de la máquina fuese mayor va en contra del propósito por el que fue creada esta tecnología.
+
+Para instalar nano ejecutamos el comando apt seguido del programa que deseamos instalar.
+$ apt install nano
+
+Comprobamos que versión hemos instalado.
+$ nano –-version 
+
+
+<h2>Administrar contenedores de Docker</h2>
+
+Para mostrar los contenedores activos utilizamos el  comando:
+$  docker ps
+
+El comando no ha devuelto ningún contenedor ¿por qué? Esto se debe a que si no añadimos la opción -d  al comando docker run, cuando salimos del contenedor estos se paran.
+
+Para comprobar los contenedores activos e inactivos utilizamos el comando:
+$ docker ps -a
+
+Para ver el último contenedor que ha sido creado utilizamos la opción -l:
+$ docker ps -l
+
+Para iniciar un contenedor detenido, utilizamos docker start, seguido del nombre del contenedor  o el ID. Vamos a iniciar el contenedor basado en Ubuntu con el ID cf9cc8313e87:
+$ docker start ID_Contenedor
+
+Para detener un contenedor, utilizamos docker stop, seguido del ID o nombre del contenedor. Esta vez usaremos el nombre que Docker asignó al contenedor, que es nostalgic_grothendieck:
+$ docker stop ID_Contenedor
+
+Una vez que decidamos que ya no necesitamos un contenedor, lo eliminamos con el comando docker rm y el nombre o ID. Utilizamos el comando docker ps -a para visualizar el ID o nombre del contenedor asociado con su imagen y eliminarlo.
+$ docker rm ID_Contenedor
+
+Del mismo modo que hemos borrado el contenedor una vez detenido, también podemos eliminarlo mientras está aún corriendo con la opción -f.
+$ docker rm -f nombre_contenedor 
+
+Podemos iniciar un nuevo contenedor y darle un nombre usando el conmutador –name. También podemos usar el conmutador –rm para crear un contenedor que se elimine de forma automática cuando se detenga. Consulte el comando docker run help para obtener más información sobre estas y otras opciones.
+
+
+
+
+

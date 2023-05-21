@@ -45,7 +45,7 @@ Finalmente, el archivo de configuración de Nginx debe adherirse a un conjunto p
   + Las líneas que comienzan con el signo de almohadilla # son comentarios.
 
 
-Configuracion de parametros y explicación:
+SECCIONES: Configuracion de parametros y explicación.
 
 Para permitir que Nginx funcione mejor, necesitamos configurar workers en la sección de eventos. 
 La configuración de los trabajadores de Nginx le permite procesar las conexiones de los clientes de manera eficaz.
@@ -77,6 +77,211 @@ permitir que los trabajadores acepten nuevas conexiones una por una.
 -- mutex_accept_delay:  Esta directiva determina cuánto tiempo debe esperar un trabajador antes de aceptar una nueva conexión. Una vez el accept_mutex está activado, se asigna un bloqueo de exclusión mutua 
 a un trabajador durante un período de tiempo especificado por el accept_mutex_delay . Cuando se acabe el plazo, el siguiente trabajador de la fila estará listo para aceptar nuevas conexiones.
 
--- use: Esta directiva especifica el método para procesar una conexión desde el cliente. En este tutorial, decidimos establecer el valor en epoll porque estamos trabajando en un Ubuntu plataforma. los epoll es el método de procesamiento más eficaz para plataformas Linux.
+-- use: Esta directiva especifica el método para procesar una conexión desde el cliente. En este tutorial, decidimos establecer el valor en epoll porque estamos trabajando en un Ubuntu. 
+los epoll es el método de procesamiento más eficaz para plataformas Linux.
 
 -- epoll_events:  El valor de esta directiva especifica el número de eventos que Nginx transferirá al kernel.
+
+
+*E/S de disco:
+(En nuestro caso no utilizaremos estas características a excepción de sendfile pero me parece importante al menos mencionarlas)
+
+En esta sección, configuraremos la actividad de E/S asíncrona en Nginx para permitirle realizar una transferencia de datos efectiva y mejorar la efectividad de la caché.
+E/S de disco simplemente se refiere a operaciones de escritura y lectura entre el disco duro y la RAM. Haremos uso de <a href="https://linux.die.net/man/2/sendfile">sendfile(</a>) dentro del kernel para enviar archivos pequeños.
+
+Puedes hacer uso del http section,  location section y server section para directivas en esta área.
+La location section, server section se puede incrustar o colocar dentro del http section para que la configuración sea legible.
+
+location /pdf/  {
+   sendfile on; 
+   aio      on; 
+}  
+location /audio/ {  
+    directio    4m
+    directio_alignment 512  
+}
+
+-- sendfile:  Para utilizar los recursos del sistema operativo, establezca el valor de esta directiva en on. sendfile transfiere datos entre descriptores de archivos dentro del espacio del kernel del sistema operativo sin enviarlos a los búferes de la aplicación. Esta directiva se utilizará para servir archivos pequeños.
+
+-- directio:  Esta directiva mejora la eficacia de la caché al permitir que la lectura y la escritura se envíen directamente a la aplicación.  directio es una característica del sistema de archivos de todos los sistemas operativos modernos. Esta directiva se utilizará para servir archivos más grandes, como videos.
+
+-- aio:  Esta directiva habilita multihilo cuando se establece en on para la operación de escritura y lectura. El subproceso múltiple es un modelo de ejecución que permite que varios subprocesos se ejecuten por separado entre sí mientras comparten los recursos del proceso de alojamiento.
+
+-- directio_alignment:  Esta directiva asigna un valor de tamaño de bloque a la transferencia de datos. Se relaciona con el directio  Directiva.
+
+
+*Capa de red
+
+En esta sección, haremos uso de directivas como tcp_nodelay y tcp_nopush para evitar que los paquetes pequeños esperen un período de tiempo específico de aproximadamente 200 milisegundos antes de enviarse a la vez.
+
+Por lo general, cuando los paquetes se transfieren en "partes", tienden a saturar la red con mucha carga. Entonces John Nagle construyó un algoritmo de almacenamiento en búfer para resolver este problema. El propósito del algoritmo de almacenamiento en búfer de Nagle es evitar que los paquetes pequeños saturen la red altamente cargada.
+
+http {   
+  tcp_nopush  on; 
+  tcp_nodelay on;
+  }
+  
+tcp_nodelay: Esta directiva, por defecto, está deshabilitada para permitir que los paquetes pequeños esperen un período específico antes de enviarse de una vez. Para permitir que todos los datos se envíen a la vez, esta directiva está habilitada.
+
+tcp_nopush:   Porque hemos habilitado tcp_nodelay directiva, los paquetes pequeños se envían a la vez. Sin embargo, si aún desea utilizar el algoritmo de almacenamiento en búfer de John Nagle, también podemos habilitar el tcp_nopush para agregar paquetes entre sí y enviarlos todos a la vez.
+
+
+*Amortiguadores
+
+Echemos un vistazo a cómo configurar búferes de solicitud en Nginx para manejar las solicitudes de manera efectiva. Un búfer es un almacenamiento temporal donde los datos se guardan y procesan durante algún tiempo.
+
+server { 
+   client_body_buffer_size 8k;
+   client_max_body_size 2m; 
+   client_body_in_single_buffer on;  
+   client_body_temp_pathtemp_files 1 2;
+   client_header_buffer_size  1m; 
+   large_client_header_buffers 4 8k;
+}
+
+Es importante comprender qué hacen esas líneas de amortiguación:
+
+-- client_body_buffer_size:  Esta directiva establece el tamaño del búfer para el cuerpo de la solicitud. Si planea ejecutar el servidor web en sistemas de 64 bits, debe establecer el valor en 16k. Si desea ejecutar el servidor web en el sistema de 32 bits, establezca el valor en 8k.
+
+-- client_max_body_size: Si tiene la intención de manejar cargas de archivos grandes, debe establecer esta directiva en al menos 2m o más. Por defecto, está configurado en 1m.
+
+-- client_body_in_file_only: Si ha desactivado la directiva client_body_buffer_size con el símbolo hashtag  # y esta directiva client_body_in_file_only está configurado, Nginx guardará los búferes de solicitud en un archivo temporal. No se recomienda para un entorno de producción.
+
+-- client_body_in_single_buffer:  A veces, no todo el cuerpo de la solicitud se almacena en un búfer. El resto se guarda o se escribe en un archivo temporal. Sin embargo, si tiene la intención de guardar o almacenar el búfer de solicitud completo en un solo búfer, debe habilitar esta directiva.
+
+-- client_header_buffer_size:  Puede utilizar esta directiva para establecer o asignar un búfer para los encabezados de solicitud. Puede establecer este valor en 1m.
+
+-- large_client_header_buffers: Esta directiva se utiliza para establecer el número y el tamaño máximos para leer encabezados de solicitud grandes. Puede establecer el número máximo y el tamaño del búfer en 4  y 8k precisamente.
+
+
+*Compresión:
+
+Comprimir la cantidad de datos transferidos a través de la red es otra forma de garantizar que su servidor web funcione mejor. En esta sección, haremos uso de directivas como gzip, gzip_comp_level y gzip_min_length para comprimir datos.
+
+http {  
+  gzip on;
+  gzip_comp_level  2;
+  gzip_min_length  1000; 
+  gzip_types  text/xml text/css; 
+  gzip_http_version 1.1; 
+  gzip_vary  on;  
+  gzip_disable "MSIE [4-6] \."; 
+}
+
+-- gzip:  Si desea habilitar la compresión, establezca el valor de esta directiva en on. Por defecto, está deshabilitado.
+
+-- gzip_comp_level:  Puede hacer uso de esta directiva para establecer el nivel de compresión. Para no desperdiciar recursos de la CPU, no es necesario establecer el nivel de compresión demasiado alto. Entre 1 y 9, puede establecer el nivel de compresión en 2 or 3.
+
+-- gzip_min_length:  Establezca la longitud de respuesta mínima para la compresión mediante el content-length response header field. Puede configurarlo en más de 20 bytes.
+
+-- gzip_types: Esta directiva le permite elegir el tipo de respuesta que desea comprimir. De forma predeterminada, el tipo de respuesta text/html siempre está comprimido. Puede agregar otro tipo de respuesta como text/css como se muestra en el código anterior.
+
+-- gzip_http_version:  Esta directiva le permite elegir la versión HTTP mínima de una solicitud para una respuesta comprimida. Puede utilizar el valor predeterminado que es 1.1.
+
+-- gzip_vary:  Cuándo gzip la directiva está habilitada, esta directiva agrega el campo de encabezado Vary:Accept Encoding  a la respuesta.
+
+-- gzip_disabled:  Algunos navegadores como Internet Explorer 6 no tengo soporte para gzip compression. Esta directiva hace uso de User-Agent Solicite el campo de encabezado para deshabilitar la compresión para ciertos navegadores.
+
+
+*Almacenamiento en caché
+
+Aproveche las funciones de almacenamiento en caché para reducir la cantidad de veces que se cargan los mismos datos varias veces. Nginx proporciona funciones para almacenar en caché metadatos de contenido estático a través de open_file_cache Directiva.
+
+http {  
+open_file_cache max=1,000 inactive=30s; 
+open_file_cache_valid 30s; 
+open_file_cache_min_uses 4; 
+open_file_cache_errors on; 
+}
+
+open_file_cache:  Esta directiva está deshabilitada de forma predeterminada. Habilítelo si desea implementar el almacenamiento en caché en Nginx. Esta directiva almacena metadatos de archivos y directorios comúnmente solicitados por los usuarios.
+
+open_file_cache_valid: Esta directiva contiene información de respaldo dentro del open_file_cache directiva. Puede usar esta directiva para establecer un período válido, generalmente en segundos, después del cual la información relacionada con archivos y directorios se vuelve a validar nuevamente.
+
+open_file_cache_min_uses:  Nginx generalmente borra información dentro del open_file_cache Directiva después de un período de inactividad basado en la open_file_cache_min_uses. Puede utilizar esta directiva para establecer un número mínimo de acceso para identificar a qué archivos y directorios se accede de forma activa.
+
+open_file_cache_errors:  Puede hacer uso de esta directiva para permitir que Nginx almacene en caché errores como "permiso denegado" o "no se puede acceder a este archivo" cuando se accede a los archivos. Por lo tanto, cada vez que un usuario accede a un recurso que no tiene derecho a hacerlo, Nginx muestra el mismo informe de error "permiso denegado".
+
+
+*Tiempo de espera
+
+Configure el tiempo de espera usando directivas como keepalive_timeout y keepalive_requests para evitar que las conexiones de larga espera desperdicien recursos.
+
+http {  
+ keepalive_timeout  30s; 
+ keepalive_requests 30;
+ send_timeout      30s;
+}
+
+-- keepalive_timeout: Mantenga las conexiones activas durante unos 30 segundos. El valor predeterminado es 75 segundos.
+
+-- keepalive_requests: Configure una serie de solicitudes para mantenerlas activas durante un período de tiempo específico. Puede establecer el número de solicitudes en 20 o 30.
+
+-- keepalive_disable: si desea deshabilitar la conexión keepalive para un grupo específico de navegadores, use esta directiva.
+
+-- send_timeout: Establece un tiempo de espera para transmitir datos al cliente.
+
+
+*Security Configuration for Nginx: Configurar registros para monitorear actividades maliciosas
+
+En esta sección configuraremos error y access registros para monitorear específicamente solicitudes válidas y no válidas. Puede examinar estos registros para averiguar quién inició sesión en un momento determinado, o qué usuario accedió a un archivo en particular, etc.
+
+http {  
+  access_log  logs/access.log   combined; 
+  error_log   logs/warn.log     warn;
+}
+
+-- error_log: Le permite configurar el registro en un archivo en particular, como syslog or stderr. También puede especificar el nivel de mensajes de error que desea registrar.
+
+-- access_log:  Permite escribir la solicitud de los usuarios en el archivo. access.log
+
+
+* Prevenir DDOS
+
+Puede proteger el Nginx de un ataque DDOS mediante los siguientes métodos:
+--Limitar las solicitudes de los usuarios 
+--Puedes hacer uso del limit_req_zone y limit_req directivas para limitar la velocidad de una solicitud enviada por los usuarios en minutos.
+
+limit_req_zone $binary_remote_addr zone=one:10m rate=30r/m;  
+
+server {
+ location /admin.html { 
+   limit_req zone=one;
+       }
+}
+
+*Limita el número de conexiones 
+
+Puedes hacer uso del limit_conn y limit_conn_zone directivas para limitar la conexión a determinadas ubicaciones o áreas. Por ejemplo, el siguiente código recibe 15 conexiones de clientes durante un período específico.
+
+El siguiente código irá al location.
+
+limit_conn_zone $binary_remote_addr zone=addr:10m;
+
+server {  
+    location /products/ {
+        limit_conn addr 10;     
+    }
+}
+
+
+*Terminar conexiones lentas   
+
+Puede hacer uso de directivas de tiempos de espera como la client_body_timeout y client_header_timeout para controlar cuánto tiempo esperará Nginx las escrituras del client body y client header.
+
+server {
+    client_body_timeout 5s;
+    client_header_timeout 5s;
+}
+
+También sería una buena idea detener los ataques DDoS en el borde aprovechando las soluciones basadas en la nube como mencionado aquí: https://geekflare.com/es/ddos-protection-service/
+
+
+*Deshabilitar la lista de directorios
+
+Puedes hacer uso del auto_index directiva para evitar la lista de directorios como se muestra en el código siguiente. Necesitas establecerlo en el valor off para deshabilitar la lista de directorios.
+
+location / {  
+ auto_index  off;
+}
+   

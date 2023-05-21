@@ -1,0 +1,19 @@
+Configura tu servicio cebolla Tor
+
+Abrir el archivo de configuración de Tor (torrc) y hacer las configuraciones apropiadas para usar el servicio cebolla. 
+Dependiendo de tu sistema operativo y tu configuración, tu archivo de configuración Tor puede variar en la ubicación del directorio o en su apariencia.
+
+Necesitarás poner las siguientes dos líneas en tu archivo torrc:
+  HiddenServiceDir /var/lib/tor/my_website/
+  HiddenServicePort 80 127.0.0.1:80
+ 
+-- La linea HiddenServiceDir (Directorio de servicio oculto) especifica el directorio en el cual deberían contenerse la información y las llaves cifradas de tu servicio cebolla. 
+Querrás cambiar la línea HiddenServiceDir para que apunte a un directorio real que sea legible/modificable por el usuario que estará corriendo Tor.
+
+-- La linea de HiddenServicePort especifica un puerto virtual (esto es, el puerto que las personas visitando tu servicio cebolla estarán usando), 
+y en el caso de arriba dirá que cualquier tráfico entrante al puerto 80 de tu servicio cebolla será redirigido a 127.0.0.1:80 (que es donde el servidor web del paso 1 está escuchando).
+
+Consejo: Una buena práctica pata evitar filtrar un servicio cebolla a una red local es ejecutar servicios cebolla sobre sockets Unix en lugar de sockets TCP. Necesitarás poner las siguientes dos líneas en tu archivo torrc:
+
+HiddenServiceDir /var/lib/tor/my-website/
+HiddenServicePort 80 unix:/var/run/tor-my-website.sock

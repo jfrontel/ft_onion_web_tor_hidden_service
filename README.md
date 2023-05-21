@@ -11,7 +11,7 @@
 <h2>¿Qué es un hidden service?</h2>
 <p>Si bien por medio del onion routing (el sistema utilizado por el navegador Tor para mantener las peticiones web anónimas) sirve para ocultar la identidad del usuario, un hidden service o servicio oculto es una comunicación por internet en la que el servidor web también es anónimo.</p>
 
-<p>Este tipo de servicios se utilizan para actividades ilegales como:
+<p>Este tipo de servicios se utilizan para actividades ilegales como:</p>
 
 <p>Ventas ilícitas por medio de pagos anónimos con ciertas criptomonedas.
 Foros de hackers donde se comparten datos filtrados, como contraseñas, números de tarjetas de crédito, etc.
@@ -45,9 +45,9 @@ Ya sabes qué es un hidden service y cómo funciona el onion routing. Ahora, ver
 
 
 <h2>¿Qué es TOR?</h2>
-<p>TOR, también conocido como The Onion Router , es la Dark Net más conocida de Internet. Su principal objetivo es crear una red distribuida y superpuesta a Internet. Las diferentes Dark Web a las que se puede acceder a través de Tor Dark Net son las que tienen la extensión .onion.</p>
+<p>TOR, también conocido como The Onion Router, es la Dark Net más conocida de Internet. Su principal objetivo es crear una red distribuida y superpuesta a Internet. Las diferentes Dark Web a las que se puede acceder a través de Tor Dark Net son las que tienen la extensión .onion.</p>
 
-<p>La técnica utilizada por Tor se conoce como Onion Routing . La idea es cambiar el enrutamiento tradicional de Internet para garantizar el anonimato y la privacidad de los datos. El enrutamiento tradicional que utilizamos para navegar por Internet es directo. Esto implica una conexión directa entre usted y el servidor al que desea conectarse. La ruta va desde su máquina hasta los enrutadores de su ISP, y desde ellos hasta el servidor que desea visitar. Si alguien ve la conexión entre usted y el servidor, sabrá exactamente de dónde proviene la conexión y hacia dónde se dirige. Incluso si está utilizando HTTPS, los encabezados no están encriptados, por lo que se verán las direcciones IP del remitente y del destinatario.</p>
+<p>La técnica utilizada por Tor se conoce como Onion Routing. La idea es cambiar el enrutamiento tradicional de Internet para garantizar el anonimato y la privacidad de los datos. El enrutamiento tradicional que utilizamos para navegar por Internet es directo. Esto implica una conexión directa entre usted y el servidor al que desea conectarse. La ruta va desde su máquina hasta los enrutadores de su ISP, y desde ellos hasta el servidor que desea visitar. Si alguien ve la conexión entre usted y el servidor, sabrá exactamente de dónde proviene la conexión y hacia dónde se dirige. Incluso si está utilizando HTTPS, los encabezados no están encriptados, por lo que se verán las direcciones IP del remitente y del destinatario.</p>
 
 <p>Para arreglar esto usamos Onion Routing. Esta técnica consiste en enviar los paquetes de datos a través de una ruta no directa utilizando diferentes nodos. La máquina del remitente establece una ruta aleatoria de diferentes nodos que seguirán los paquetes. Luego, obtiene las claves públicas de todos los nodos que serán visitados. De esta forma el paquete se cifra por capas. Primero, el paquete se cifra con la clave pública del último nodo. Después de esto, el nuevo paquete cifrado se cifra con la clave del penúltimo nodo. El proceso se repite hasta que se llega al primer nodo y se cifra el paquete. De esta forma, el paquete irá al primer nodo, se descifrará y pasará al segundo nodo, y así hasta que el paquete llegue al último nodo. En este punto, el descifrado del último nodo dará como resultado el paquete original. El receptor no tendrá que descifrar nada. Gracias a este método, nadie puede saber de dónde viene el paquete o hacia dónde va.</p>
 

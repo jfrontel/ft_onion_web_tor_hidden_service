@@ -1,22 +1,51 @@
+'''
+"SSH significa Secure Shell es un protocolo para acceso remoto seguro y otros servicios de red seguros sobre una red insegura. 
+En cuanto a, tecnologías SSH, OpenSSH es la más popular y usada. SSH reemplaza los servicios sin cifrados como Telnet, RLogin y RSH 
+y agrega muchas más características”. Wiki Debian"
+
+-- Port 42
+-- Include /etc/ssh/sshd_config.d/*.conf        -> Carpeta de configuración del servidor
+-- PermitRootLogin Yes                          -> Habilitar ssh root
+-- ChallengeResponseAuthentication no           -> Autenticación por respuesta de desafío. Cambie a yes para habilitar las contraseñas de respuesta de desafío 
+-- UsePAM yes                                   -> Debe estar marcado como "yes" para poder acceder por contraseña. Si queremos que solo acceda por llave lo marcariamos como "no"
+-- X11Forwarding yes                            -> La opción X11Forwarding permite ejecutar apliaciones gráficas de una máquina remota
+-- PrintMotd no                                 -> "PrintMotd" especifica si el servicio SSH debería mostrar el contenido de "/etc/motd" cuando el usuario ingresa
+-- AcceptEnv LANG LC_*                          -> Permite que el cliente pase variables de entorno locales al host remoto
+-- Subsystem	sftp	/usr/lib/openssh/sftp-server  -> Protocolo de Transferencia de Archivos SSH es un método para transferir datos de forma segura
+'''
+
+''' Para permitir la autentificación por contraseña
+PasswordAuthentication no
+ChallengeResponseAuthentication no
+usePAM no ( ahora se establece en sí)'''
+
+
 #	$OpenBSD: sshd_config,v 1.103 2018/04/09 20:41:22 tj Exp $
 
 # This is the sshd server system-wide configuration file.  See
 # sshd_config(5) for more information.
-
 # This sshd was compiled with PATH=/usr/bin:/bin:/usr/sbin:/sbin
-
 # The strategy used for options in the default sshd_config shipped with
 # OpenSSH is to specify options with their default value where
 # possible, but leave them commented.  Uncommented options override the
 # default value.
 
 Include /etc/ssh/sshd_config.d/*.conf
+Port 42
 
-#Port 22
+'''Por defecto el servicio SSH escuchará peticiones de cualquier dirección. Podemos indicar por ejemplo que solo se pueda acceder 
+localmente desde una ip determinada. Ejemplo: ListenAddress 192.168.1.100'''
+
+#ListenAddress ::
+#ListenAddress 0.0.0.0
 #AddressFamily any
 #ListenAddress 0.0.0.0
 #ListenAddress ::
 
+'''SSH usa dos protocolos. Habilitaremos el protocolo 2 ya que es más seguro que el antiguo protocolo 1
+Lugar donde se guardan las Keys del protocolo 2'''
+
+#Protocol 2
 #HostKey /etc/ssh/ssh_host_rsa_key
 #HostKey /etc/ssh/ssh_host_ecdsa_key
 #HostKey /etc/ssh/ssh_host_ed25519_key
@@ -61,14 +90,26 @@ PermitRootLogin Yes
 
 # Change to yes to enable challenge-response passwords (beware issues with
 # some PAM modules and threads)
-ChallengeResponseAuthentication no
 
+'''La opción "ChallengeResponseAuthentication" controla la compatibilidad con el esquema de autenticación "teclado interactivo" definido en RFC-4256. 
+El esquema de autenticación de "teclado interactivo" podría hacerle a un usuario cualquier cantidad de preguntas de múltiples aspectos. 
+En la práctica, a menudo solicita solo la contraseña del usuario.
+Por lo tanto, para usar una forma particular de autenticación de desafío-respuesta (como S/Key), es necesario configurar el servidor para usar algún backend 
+(por ejemplo, PAM) que envíe los desafíos y verifique las respuestas. Como no está configurado de forma predeterminada, 
+"ChallengeResponseAuthentication" está configurado en "no", por lo que ssh no está usando un backend no configurado.'''
+
+ChallengeResponseAuthentication no
+KbdInteractiveAuthentication no
+PasswordAuthentication no
+
+'''Opciones para Kerberos'''
 # Kerberos options
 #KerberosAuthentication no
 #KerberosOrLocalPasswd yes
 #KerberosTicketCleanup yes
 #KerberosGetAFSToken no
 
+'''Opciones para GSSAPI'''
 # GSSAPI options
 #GSSAPIAuthentication no
 #GSSAPICleanupCredentials yes
@@ -84,6 +125,9 @@ ChallengeResponseAuthentication no
 # If you just want the PAM account and session checks to run without
 # PAM authentication, then enable this but set PasswordAuthentication
 # and ChallengeResponseAuthentication to 'no'.
+
+'''La opción UsePAM define si es posible utilizar PAM (Pluggable Authentication Module). 
+Si vamos utilizar autentificación de usuario y contraseña es necesario que UsePAM esté configurado a: yes'''
 UsePAM yes
 
 #AllowAgentForwarding yes
@@ -116,9 +160,14 @@ AcceptEnv LANG LC_*
 # override default of no subsystems
 Subsystem	sftp	/usr/lib/openssh/sftp-server
 
+
 # Example of overriding settings on a per-user basis
 #Match User anoncvs
 #	X11Forwarding no
 #	AllowTcpForwarding no
 #	PermitTTY no
 #	ForceCommand cvs server
+
+
+
+

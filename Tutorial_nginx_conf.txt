@@ -1,0 +1,82 @@
+Estructura de configuración de Nginx:
+
+En esta sección veremos lo siguiente:
+-- Estructura de Nginx
+-- Secciones como un evento, HTTP y correo
+-- Sintaxis válida de Nginx
+
+Al final de esta sección, comprenderá la estructura de la configuración de Nginx, el propósito o las funciones de las secciones, así como también cómo definir directivas válidas dentro de las secciones.
+El archivo de configuración completo de Nginx tiene una estructura lógica que se compone de directivas agrupadas en una serie de secciones como la event section, http section, mail section y así sucesivamente.
+El archivo de configuración principal se encuentra en  /etc/nginx/nginx.conf  mientras que otros archivos de configuración se encuentran en  /etc/nginx.
+
+
+Contexto principal:
+
+Esta sección o contexto contiene directivas fuera de secciones específicas.
+Cualquier otra directiva como:
+    -- user  nginx; ,  
+    -- worker_processes  1; ,   
+    -- error_log  /var/log/nginx/error.log warn;  y  
+    -- pid  /var/run/nginx.pid 
+Se puede colocar dentro de la sección principal o contexto. Pero algunas de estas directivas, como la worker_processes también puede existir en el event section.
+
+
+Secciones:
+
+Las secciones en Nginx definen la configuración de los módulos de Nginx.
+    -- la http section  define la configuración del ngx_http_core module, 
+    -- el event section define la configuración del  ngx_event_module 
+    -- la sección de correo define la configuración para el ngx_mail_module.
+Puedes comprobar aquí para obtener una lista completa de las secciones en Nginx:
+    https://docs.nginx.com/nginx/admin-guide/basic-functionality/managing-configuration-files/
+    
+
+Instrucciones:
+
+Las directivas en Nginx se componen de un nombre de variable y una serie de argumentos como los siguientes: worker_processes  auto;
+La worker_processes es un nombre de variable mientras que auto sirve como argumento. Las directivas terminan con un punto y coma como se muestra arriba.
+
+Finalmente, el archivo de configuración de Nginx debe adherirse a un conjunto particular de reglas. Las siguientes son la sintaxis válida de la configuración de Nginx:
+  + Las directivas válidas comienzan con un nombre de variable y luego siguen uno o más argumentos
+  + Todas las directivas válidas terminan con un punto y coma  ;
+  + Las secciones se definen con llaves  {}
+  + Una sección se puede incrustar en otra sección
+  + La configuración fuera de cualquier sección es parte de la configuración global de Nginx.
+  + Las líneas que comienzan con el signo de almohadilla # son comentarios.
+
+
+Configuracion de parametros y explicación:
+
+Para permitir que Nginx funcione mejor, necesitamos configurar workers en la sección de eventos. 
+La configuración de los trabajadores de Nginx le permite procesar las conexiones de los clientes de manera eficaz.
+
+events { 
+    worker_processes    auto;
+    worker_connections  1024;
+    worker_rlimit_nofile 20960;
+    multi_accept        on;  
+    mutex_accept        on; 
+    mutex_accept_delay  500ms; 
+    use                 epoll; 
+    epoll_events        512;  
+}
+
+-- worker_processes: Esta directiva controla la cantidad de trabajadores en Nginx. El valor de esta directiva se establece en auto para permitir que Nginx determine la cantidad de núcleos disponibles, 
+discos, carga del servidor y subsistema de red. Sin embargo, puede descubrir la cantidad de núcleos ejecutando el comando lscpu en la terminal.
+
+-- worker_connections: Esta directiva establece el valor del número de conexiones simultáneas que puede abrir un trabajador. 
+El valor predeterminado es 512 pero lo configuramos en 1,024 para permitir que un trabajador acepte una conexión mucho más simultánea de un cliente.
+
+-- worker_rlimit_nofile: Esta directiva está relacionada de alguna manera con worker_connections. Para manejar una gran conexión simultánea, lo configuramos en un valor alto.
+
+-- multi_accept:  Esta directiva permite que un trabajador acepte muchas conexiones en la cola a la vez. Una cola en este contexto simplemente significa una secuencia de objetos de datos esperando ser procesados.
+
+-- mutex_accept: Esta directiva está desactivada de forma predeterminada. Pero debido a que hemos configurado muchos trabajadores en Nginx, debemos activarlo como se muestra en el código anterior para 
+permitir que los trabajadores acepten nuevas conexiones una por una.
+
+-- mutex_accept_delay:  Esta directiva determina cuánto tiempo debe esperar un trabajador antes de aceptar una nueva conexión. Una vez el accept_mutex está activado, se asigna un bloqueo de exclusión mutua 
+a un trabajador durante un período de tiempo especificado por el accept_mutex_delay . Cuando se acabe el plazo, el siguiente trabajador de la fila estará listo para aceptar nuevas conexiones.
+
+-- use: Esta directiva especifica el método para procesar una conexión desde el cliente. En este tutorial, decidimos establecer el valor en epoll porque estamos trabajando en un Ubuntu plataforma. los epoll es el método de procesamiento más eficaz para plataformas Linux.
+
+-- epoll_events:  El valor de esta directiva especifica el número de eventos que Nginx transferirá al kernel.

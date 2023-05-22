@@ -1,6 +1,8 @@
-Docker es un software que simplifica el proceso de administración de aplicaciones en contenedores. Estos permiten ejecutar sus aplicaciones en procesos con aislamiento de recursos. Son similares a las máquinas virtuales, pero los contenedores son más portátiles, más flexibles con los recursos y más dependientes del sistema operativo host.
+Docker es un software que simplifica el proceso de administración de aplicaciones en contenedores. Estos permiten ejecutar sus aplicaciones en procesos con aislamiento de recursos. 
+Son similares a las máquinas virtuales, pero los contenedores son más portátiles, más flexibles con los recursos y más dependientes del sistema operativo host.
 
-Una vez instalado docker en el sistema operativo que estemos usando. Por defecto, el comando docker solo puede ser ejecutado por el usuario root o un usuario del grupo docker, que se crea automáticamente durante el proceso de instalación de Docker.
+Una vez instalado docker en el sistema operativo que estemos usando. Por defecto, el comando docker solo puede ser ejecutado por el usuario root o un usuario del grupo docker, 
+que se crea automáticamente durante el proceso de instalación de Docker.
 
 Si queremos evitar escribir sudo al ejecutar el comando docker, debemos agregar nuestro nombre de usuario al grupo docker:
 $ sudo usermod -aG docker ${USER}
@@ -23,7 +25,8 @@ $ docker info
 
 Imágenes de Docker
 
-Los contenedores de Docker se construyen con imágenes de Docker. Por defecto, Docker obtiene estas imágenes de Docker Hub, un registro de Docker gestionado por Docker, la empresa responsable del proyecto Docker. Cualquiera puede alojar sus imágenes en Docker Hub, de modo que la mayoría de las aplicaciones y las distribuciones de Linux que necesitaremos tendrán imágenes alojadas allí.
+Los contenedores de Docker se construyen con imágenes de Docker. Por defecto, Docker obtiene estas imágenes de Docker Hub, un registro de Docker gestionado por Docker, la empresa responsable del proyecto Docker. 
+Cualquiera puede alojar sus imágenes en Docker Hub, de modo que la mayoría de las aplicaciones y las distribuciones de Linux que necesitaremos tendrán imágenes alojadas allí.
 
 Para verificar si puede acceder a imágenes y descargarlas de Docker Hub, escribimos lo siguiente:
 $ docker run hello-world
